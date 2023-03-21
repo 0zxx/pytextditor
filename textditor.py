@@ -17,26 +17,29 @@ class TextEditor:
         self.text.config(yscrollcommand=scrollbar.set)
         scrollbar.config(command=self.text.yview)
 
+        self.open_button = tk.Button(master, text="Open", command=self.open_file)
+        self.open_button.pack(side=tk.RIGHT)
+
         self.save_button = tk.Button(master, text="Save", command=self.save)
-        self.save_button.pack()
+        self.save_button.pack(side=tk.LEFT)
 
         self.search_label = tk.Label(master, text="Search:")
-        self.search_label.pack()
+        self.search_label.pack(side=tk.TOP)
 
         self.search_entry = tk.Entry(master)
-        self.search_entry.pack()
+        self.search_entry.pack(side=tk.TOP)
 
         self.search_button = tk.Button(master, text="Search", command=self.search)
-        self.search_button.pack()
+        self.search_button.pack(side=tk.TOP)
 
         self.replace_label = tk.Label(master, text="Replace:")
-        self.replace_label.pack()
+        self.replace_label.pack(side=tk.TOP)
 
         self.replace_entry = tk.Entry(master)
-        self.replace_entry.pack()
+        self.replace_entry.pack(side=tk.TOP)
 
         self.replace_button = tk.Button(master, text="Replace", command=self.replace)
-        self.replace_button.pack()
+        self.replace_button.pack(side=tk.TOP)
 
         self.text.bind("<Control-a>", self.select_all)
 
@@ -44,6 +47,13 @@ class TextEditor:
         file_path = filedialog.asksaveasfilename(defaultextension='.txt')
         with open(file_path, 'w') as file:
             file.write(self.text.get('1.0', tk.END))
+
+    def open_file(self):
+        file_path = filedialog.askopenfilename()
+        if file_path:
+            with open(file_path, 'r') as file:
+                self.text.delete('1.0', tk.END)
+                self.text.insert('1.0', file.read())
 
     def select_all(self, event):
         self.text.tag_add(tk.SEL, '1.0', tk.END)
@@ -73,3 +83,4 @@ class TextEditor:
 root = tk.Tk()
 editor = TextEditor(root)
 root.mainloop()
+
