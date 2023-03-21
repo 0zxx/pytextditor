@@ -8,54 +8,67 @@ class TextEditor:
         self.master = master
         master.title("TextEditor")
 
-        # Create a frame to hold the Text widget and line number Text widget
-        frame = tk.Frame(master)
-        frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.text = tk.Text(master)
+        self.text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
-        # Create the Text widget and scrollbar
-        self.text = tk.Text(frame)
-        self.text.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
-        scroll = tk.Scrollbar(frame, command=self.text.yview)
-        scroll.pack(side=tk.RIGHT, fill=tk.Y)
-        self.text.config(yscrollcommand=scroll.set)
+        scrollbar = tk.Scrollbar(master)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        # Create the line number Text widget
-        self.line_numbers = tk.Text(frame, width=4, padx=5, pady=5, takefocus=0, border=0, background='lightgray', state='disabled')
-        self.line_numbers.pack(side=tk.LEFT, fill=tk.Y)
-
-        # Bind the Text widget to update the line numbers
-        self.text.bind('<<Modified>>', self.update_line_numbers)
-        self.text.bind('<Configure>', self.update_line_numbers)
-        self.text.bind('<Return>', self.refresh_text)
+        self.text.config(yscrollcommand=scrollbar.set)
+        scrollbar.config(command=self.text.yview)
 
         self.save_button = tk.Button(master, text="Save", command=self.save)
         self.save_button.pack()
+
+        self.search_label = tk.Label(master, text="Search:")
+        self.search_label.pack()
+
+        self.search_entry = tk.Entry(master)
+        self.search_entry.pack()
+
+        self.search_button = tk.Button(master, text="Search", command=self.search)
+        self.search_button.pack()
+
+        self.replace_label = tk.Label(master, text="Replace:")
+        self.replace_label.pack()
+
+        self.replace_entry = tk.Entry(master)
+        self.replace_entry.pack()
+
+        self.replace_button = tk.Button(master, text="Replace", command=self.replace)
+        self.replace_button.pack()
+
+        self.text.bind("<Control-a>", self.select_all)
 
     def save(self):
         file_path = filedialog.asksaveasfilename(defaultextension='.txt')
         with open(file_path, 'w') as file:
             file.write(self.text.get('1.0', tk.END))
 
-    def update_line_numbers(self, event=None):
-        """Update the line numbers in the line_numbers Text widget"""
-        # Clear the line_numbers widget
-        self.line_numbers.config(state='normal')
-        self.line_numbers.delete('1.0', tk.END)
+    def select_all(self, event):
+        self.text.tag_add(tk.SEL, '1.0', tk.END)
+        return 'break'
 
-        # Get the number of lines in the text widget
-        num_lines = str(self.text.count('1.0', tk.END, 'displaylines')[0])
+    def search(self):
+        search_string = self.search_entry.get()
+        if search_string:
+            start = '1.0'
+            while True:
+                start = self.text.search(search_string, start, tk.END)
+                if not start:
+                    break
+                end = f"{start}+{len(search_string)}c"
+                self.text.tag_add("highlight", start, end)
+                start = end
 
-        # Add the line numbers to the line_numbers widget
-        for i in range(1, int(num_lines) + 1):
-            self.line_numbers.insert(tk.END, str(i) + '\n')
-
-        # Disable the line_numbers widget
-        self.line_numbers.config(state='disabled')
-
-    def refresh_text(self, event=None):
-        """Refresh the text in the Text widget"""
-        self.update_line_numbers()
-        self.text.update()
+    def replace(self):
+        search_string = self.search_entry.get()
+        replace_string = self.replace_entry.get()
+        if search_string and replace_string:
+            content = self.text.get('1.0', tk.END)
+            new_content = content.replace(search_string, replace_string)
+            self.text.delete('1.0', tk.END)
+            self.text.insert('1.0', new_content)
 
 root = tk.Tk()
 editor = TextEditor(root)
